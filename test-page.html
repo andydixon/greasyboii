@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Greasemonkey Test Page</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    h1 { color: #333; }
+    .test-section {
+      background: white;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .test-element {
+      padding: 10px;
+      background: #e3f2fd;
+      border-left: 4px solid #2196F3;
+      margin: 10px 0;
+    }
+    code {
+      background: #f5f5f5;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+  </style>
+</head>
+<body>
+  <h1>Greasemonkey Extension Test Page</h1>
+  
+  <div class="test-section">
+    <h2>Test Element Selector</h2>
+    <p>This page contains elements you can target with your Greasemonkey rules.</p>
+    
+    <div id="test-element-1" class="test-element">
+      <strong>Element #1</strong> - ID: <code>#test-element-1</code>
+    </div>
+    
+    <div id="test-element-2" class="test-element">
+      <strong>Element #2</strong> - ID: <code>#test-element-2</code>
+    </div>
+    
+    <div class="test-class-target test-element">
+      <strong>Element #3</strong> - Class: <code>.test-class-target</code>
+    </div>
+  </div>
+
+  <div class="test-section">
+    <h2>Example Rules to Try</h2>
+    
+    <h3>Example 1: Change Background Color</h3>
+    <ul>
+      <li><strong>Match Type:</strong> URL contains string</li>
+      <li><strong>URL Pattern:</strong> <code>test-page.html</code></li>
+      <li><strong>CSS Code:</strong></li>
+    </ul>
+    <pre><code>body {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: white !important;
+}</code></pre>
+
+    <h3>Example 2: Add Alert on Element</h3>
+    <ul>
+      <li><strong>Match Type:</strong> Page contains element</li>
+      <li><strong>Element Selector:</strong> <code>#test-element-1</code></li>
+      <li><strong>JavaScript Code:</strong></li>
+    </ul>
+    <pre><code>const elem = document.getElementById('test-element-1');
+elem.style.background = 'yellow';
+elem.innerHTML += ' - Modified by Greasemonkey!';</code></pre>
+
+    <h3>Example 3: Combined Rule</h3>
+    <ul>
+      <li><strong>Match Type:</strong> Both URL and element</li>
+      <li><strong>URL Pattern:</strong> <code>test-page</code></li>
+      <li><strong>Element Selector:</strong> <code>.test-class-target</code></li>
+      <li><strong>JavaScript Code:</strong></li>
+    </ul>
+    <pre><code>const elem = document.querySelector('.test-class-target');
+elem.style.border = '4px solid red';
+elem.style.animation = 'pulse 2s infinite';
+
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+`;
+document.head.appendChild(style);</code></pre>
+
+    <h3>Example 4: Hide Elements</h3>
+    <ul>
+      <li><strong>Match Type:</strong> URL contains string</li>
+      <li><strong>URL Pattern:</strong> <code>test-page.html</code></li>
+      <li><strong>CSS Code:</strong></li>
+    </ul>
+    <pre><code>#test-element-2 {
+  display: none !important;
+}</code></pre>
+  </div>
+
+  <div class="test-section">
+    <h2>How to Test</h2>
+    <ol>
+      <li>Install the Greasemonkey extension in your browser</li>
+      <li>Open this test page in your browser</li>
+      <li>Click the Greasemonkey icon in your toolbar</li>
+      <li>Create a new rule using one of the examples above</li>
+      <li>Reload this page to see the effects</li>
+      <li>Check the browser console (F12) for Greasemonkey log messages</li>
+    </ol>
+  </div>
+
+  <div class="test-section">
+    <h2>Verification</h2>
+    <p>Open your browser's developer console (F12) to see Greasemonkey execution logs.</p>
+    <p>You should see messages like: <code>[Greasemonkey] Executing rule: Your Rule Name</code></p>
+  </div>
+
+  <script>
+    console.log('Test page loaded. Greasemonkey rules should execute now if conditions are met.');
+  </script>
+</body>
+</html>

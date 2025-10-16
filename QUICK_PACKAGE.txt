@@ -1,0 +1,100 @@
+═══════════════════════════════════════════════════════════════════════
+                    GREASYBOII PACKAGING GUIDE
+                         Quick Reference
+═══════════════════════════════════════════════════════════════════════
+
+✅ ALREADY PACKAGED!
+
+Files ready in dist/ folder:
+• greasyboii-chrome-v1.0.4.zip (62 KB)
+• greasyboii-firefox-v1.0.4.zip (62 KB)
+
+═══════════════════════════════════════════════════════════════════════
+
+🚀 QUICK INSTALL
+
+Chrome:
+1. Extract ZIP
+2. chrome://extensions/
+3. Enable "Developer mode"
+4. "Load unpacked" → select folder
+5. Done!
+
+Firefox:
+1. Rename .zip to .xpi
+2. Drag .xpi into Firefox
+3. Click "Add"
+4. Done!
+
+═══════════════════════════════════════════════════════════════════════
+
+📦 RE-PACKAGE (if needed)
+
+Run the script:
+./package-all.sh
+
+Or manually:
+cd chrome && zip -r ../dist/greasyboii-chrome.zip *
+cd firefox && zip -r ../dist/greasyboii-firefox.zip *
+
+═══════════════════════════════════════════════════════════════════════
+
+🎁 CREATE .CRX FOR CHROME (Shareable)
+
+1. chrome://extensions/
+2. Developer mode ON
+3. "Pack extension"
+4. Select chrome/ folder
+5. Leave private key empty
+6. Get chrome.crx file
+7. Share this file!
+
+Users install: Drag chrome.crx to chrome://extensions/
+
+═══════════════════════════════════════════════════════════════════════
+
+🦊 CREATE .XPI FOR FIREFOX (Shareable)
+
+Simply rename:
+mv dist/greasyboii-firefox-v1.0.4.zip dist/greasyboii-firefox-v1.0.4.xpi
+
+Share the .xpi file!
+
+Users install: Drag .xpi into Firefox
+
+═══════════════════════════════════════════════════════════════════════
+
+📚 DOCUMENTATION
+
+• PACKAGING.md - Full packaging guide
+• INSTALL_PACKAGED.md - Installation instructions
+• BUILD.md - Build instructions
+• README.md - Complete documentation
+
+═══════════════════════════════════════════════════════════════════════
+
+🏪 PUBLISH TO STORES
+
+Chrome Web Store:
+• $5 one-time fee
+• https://chrome.google.com/webstore/developer/dashboard
+• Upload ZIP file
+• Review takes 1-3 days
+
+Firefox Add-ons:
+• Free
+• https://addons.mozilla.org/developers/
+• Upload ZIP file
+• Choose Listed or Unlisted
+• Instant signing for unlisted
+
+═══════════════════════════════════════════════════════════════════════
+
+✅ YOUR PACKAGES ARE READY!
+
+Files: dist/greasyboii-chrome-v1.0.4.zip
+       dist/greasyboii-firefox-v1.0.4.zip
+
+Ready to: Install, Share, or Publish!
+
+═══════════════════════════════════════════════════════════════════════

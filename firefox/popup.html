@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GreasyBoii</title>
+  <link rel="stylesheet" href="bootstrap.min.css">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container-fluid p-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="mb-0">GreasyBoii</h4>
+      <button class="btn btn-primary btn-sm" id="addRuleBtn">+ Add Rule</button>
+    </div>
+
+    <div id="rulesList" class="rules-list mb-3">
+      <!-- Rules will be dynamically inserted here -->
+    </div>
+
+    <div id="emptyState" class="text-center text-muted py-4" style="display: none;">
+      <p>No rules yet. Click "Add Rule" to get started.</p>
+    </div>
+  </div>
+
+  <!-- Add/Edit Rule Modal -->
+  <div class="modal fade" id="ruleModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalTitle">Add Rule</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="ruleForm">
+            <div class="mb-3">
+              <label for="ruleName" class="form-label">Rule Name</label>
+              <input type="text" class="form-control" id="ruleName" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="matchType" class="form-label">Match Type</label>
+              <select class="form-select" id="matchType" required>
+                <option value="url">URL contains string</option>
+                <option value="element">Page contains element</option>
+                <option value="both">Both URL and element</option>
+              </select>
+            </div>
+
+            <div class="mb-3" id="urlPatternGroup">
+              <label for="urlPattern" class="form-label">URL Pattern</label>
+              <input type="text" class="form-control" id="urlPattern" placeholder="e.g., example.com">
+              <small class="form-text text-muted">Enter a string to match in the URL</small>
+            </div>
+
+            <div class="mb-3" id="elementSelectorGroup" style="display: none;">
+              <label for="elementSelector" class="form-label">Element Selector</label>
+              <input type="text" class="form-control" id="elementSelector" placeholder="e.g., #my-element or .my-class">
+              <small class="form-text text-muted">Enter a CSS selector</small>
+            </div>
+
+            <div class="mb-3">
+              <label for="javascript" class="form-label">JavaScript Code</label>
+              <textarea class="form-control font-monospace" id="javascript" rows="6" placeholder="console.log('Hello from GreasyBoii!');"></textarea>
+            </div>
+
+            <div class="mb-3">
+              <label for="css" class="form-label">CSS Code</label>
+              <textarea class="form-control font-monospace" id="css" rows="6" placeholder="body { background-color: #000; }"></textarea>
+            </div>
+
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="ruleEnabled" checked>
+              <label class="form-check-label" for="ruleEnabled">
+                Enabled
+              </label>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="saveRuleBtn">Save Rule</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="bootstrap.bundle.min.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
