@@ -1,16 +1,26 @@
 {
   "manifest_version": 2,
   "name": "GreasyBoii",
-  "version": "1.0.4",
-  "description": "Execute custom JavaScript and CSS based on URL patterns and page elements",
+  "version": "2.0.0",
+  "description": "Execute custom JavaScript and CSS based on URL patterns and page elements, plus one-click page tools: bulk downloads, link harvesting, scraping and more",
   "author": "Andy Dixon",
   "permissions": [
     "storage",
     "activeTab",
+    "downloads",
     "<all_urls>"
   ],
   "background": {
     "scripts": ["background.js"]
+  },
+  "commands": {
+    "toggle-greasyboii": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+G",
+        "mac": "Command+Shift+G"
+      },
+      "description": "Enable/disable all GreasyBoii rules"
+    }
   },
   "content_scripts": [
     {

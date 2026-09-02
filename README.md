@@ -19,6 +19,21 @@ A powerful browser extension that allows you to execute custom JavaScript and CS
 - 📝 **JavaScript & CSS**: Support for both JavaScript execution and CSS injection
 - 🔍 **Visual Indicators**: Clear badges showing rule type (URL/Element/Both) and code types (JS/CSS)
 
+### 2.0 additions
+
+- 🎯 **Visual element picker** — click "Pick on page" and select an element instead of guessing a CSS selector
+- 🤖 **Auto-click** — automatically click a selector once, or repeatedly (cookie banners, "load more" buttons)
+- 🔤 **Find & replace text** — swap text on the page as part of a rule
+- 🔁 **SPA re-apply** — optionally re-checks a rule's condition as the page's DOM changes, for client-routed apps
+- 📥 **Bulk media downloader** — scan a page for images/PDFs/videos (or custom extensions) and download them all at once
+- 🔗 **Link harvester** — pull every link out of a container (or the whole page), then open selected links in new tabs or export them as a `.txt` list
+- 🧮 **Page data scraper** — pull text/href/src/any attribute from every element matching a selector, export as CSV or JSON
+- 💾 **Rule import/export** — back up or share your rules as a JSON file
+- 🌓 **One-click dark mode** — adds a dark-mode rule for the current site in a single click
+- 🔌 **Master kill-switch** — `Ctrl+Shift+G` (`Cmd+Shift+G` on Mac) instantly disables/re-enables every rule, with a toolbar badge showing the state
+
+Available in both browsers as of v2.0.0.
+
 ## Installation
 
 ### Chrome Installation
@@ -75,6 +90,42 @@ A powerful browser extension that allows you to execute custom JavaScript and CS
 ### Toggling a Rule
 
 Use the toggle switch on each rule card to quickly enable or disable rules without editing them.
+
+### Advanced Rule Fields
+
+Open the "Advanced" section in the rule editor for three extra actions a rule can take,
+on top of JS/CSS:
+
+- **Auto-Click Selector** — clicked once when the rule matches; set "Repeat every (sec)"
+  to keep clicking on an interval (e.g. re-dismissing a recurring banner), and "Max
+  clicks" to cap it.
+- **Text Replacements** — a list of Find/Replace pairs applied to the page's visible text.
+- **Re-check on page changes (for SPAs)** — re-evaluates the rule's match condition as the
+  DOM changes, so it still fires after a client-side route change instead of only once
+  on page load.
+
+Next to the Element Selector field, click **🎯 Pick** to select an element visually
+instead of writing a CSS selector by hand — hover to highlight, click to select, Esc to
+cancel. Because the popup closes as soon as you click the page, the picked selector is
+filled in the next time you open the popup (it re-opens the rule you were editing
+automatically).
+
+### Power Tools
+
+The **Tools** tab has three one-off utilities that act on the current page directly,
+outside the rule system:
+
+- **Bulk Media Downloader** — pick a type (Images/PDFs/Videos/custom extensions), scan
+  the page, then download everything found in one click.
+- **Link Harvester** — optionally scope to a container CSS selector (e.g. `.article-list`
+  or `#results`), extract every link inside it, then open the selected ones in new
+  background tabs or export the list as `.txt`.
+- **Page Data Scraper** — pull text, `href`, `src`, or any attribute from every element
+  matching a selector, then export the results as CSV or JSON.
+
+The header also has **⬇ Export** / **⬆ Import** for backing up or sharing your whole
+rule set as JSON, and **🌓** to add a ready-made dark-mode rule for the site you're
+currently on.
 
 ## Examples
 
@@ -202,11 +253,21 @@ Rules are stored as JSON in browser sync storage:
       "elementSelector": "",
       "javascript": "console.log('Hello');",
       "css": "body { background: red; }",
-      "enabled": true
+      "enabled": true,
+
+      // v2.0+ advanced fields (all optional):
+      "autoClickSelector": "",
+      "autoClickIntervalSec": 0,
+      "autoClickMax": 0,
+      "reapplyOnDomChanges": false,
+      "textReplacements": []
     }
   ]
 }
 ```
+
+Both browsers also store a top-level `masterEnabled` boolean (default `true`) — the
+`Ctrl+Shift+G` kill-switch — separately from the `rules` array.
 
 ### Browser Compatibility
 
@@ -217,28 +278,34 @@ Rules are stored as JSON in browser sync storage:
 
 ## Building for Distribution
 
-### Chrome
+Run `./package-all.sh` from the repo root to build both. It delegates to two dedicated
+scripts, each of which reads its version straight out of its own `manifest.json` (no
+hardcoded version strings to keep in sync), checks all required files are present, and
+zips the folder's *contents* — not the folder itself — to the zip root:
 
-1. Ensure all files are in the `chrome` directory
-2. Go to `chrome://extensions/`
-3. Click "Pack extension"
-4. Select the `chrome` directory
-5. This creates a `.crx` file for distribution
+```bash
+./package-all.sh
+# or individually:
+./package-chrome-release.sh    # -> dist/greasyboii-chrome-v<version>.zip
+./package-firefox-release.sh   # -> dist/greasyboii-firefox-v<version>.zip
+```
 
-### Firefox
-
-1. Install `web-ext` tool: `npm install -g web-ext`
-2. Navigate to the `firefox` directory
-3. Run: `web-ext build`
-4. This creates a `.zip` file in `web-ext-artifacts/`
-5. Submit to [addons.mozilla.org](https://addons.mozilla.org) for signing
+- **Chrome**: upload `dist/greasyboii-chrome-v<version>.zip` to the
+  [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/developer/dashboard).
+  (`chrome://extensions/` → "Pack extension" also still works if you want a `.crx` +
+  `.pem` instead.)
+- **Firefox**: upload `dist/greasyboii-firefox-v<version>.zip` to
+  [addons.mozilla.org](https://addons.mozilla.org), or sign it yourself:
+  ```bash
+  cd dist && web-ext sign --api-key=YOUR_API_KEY --api-secret=YOUR_API_SECRET --source-dir=../firefox
+  ```
 
 ## Security Considerations
 
 - **User Responsibility**: Be cautious with JavaScript code execution
 - **HTTPS**: Script injection works on both HTTP and HTTPS sites
 - **CSP**: Some sites with strict Content Security Policy may block injected scripts
-- **Permissions**: Extension requires broad permissions (`<all_urls>`) to work on all sites
+- **Permissions**: Extension requires broad permissions (`<all_urls>`) to work on all sites, plus `downloads` (used only by the Tools tab's bulk media downloader)
 
 ## Troubleshooting
 
@@ -300,6 +367,22 @@ This extension is provided as-is for personal and educational use.
 For issues, questions, or feature requests, please contact Andy Dixon.
 
 ## Version History
+
+### 2.0.0 (Chrome and Firefox)
+- Visual element picker for the Element Selector field
+- Auto-click rule action (once or repeating)
+- Find & replace text rule action
+- SPA re-apply (MutationObserver-based rule re-checking)
+- Bulk media downloader (Tools tab)
+- Link harvester with bulk open-in-tabs / export (Tools tab)
+- Page data scraper with CSV/JSON export (Tools tab)
+- Rule import/export as JSON
+- One-click "Dark Mode This Site" rule generator
+- Master enable/disable kill-switch with `Ctrl+Shift+G` shortcut and toolbar badge
+- New icon
+- Shipped Firefox-only first; Chrome caught up to full feature parity in the same 2.0.0
+  line (Chrome's JS injection still goes through its `chrome.scripting.executeScript`
+  relay rather than Firefox's `wrappedJSObject`/script-tag approach — see CLAUDE.md)
 
 ### 1.0.0 (Initial Release)
 - URL pattern matching

@@ -2,6 +2,34 @@
 
 All notable changes to GreasyBoii will be documented in this file.
 
+## [2.0.0] - 2026-09-02 (Chrome and Firefox)
+
+### Added
+- Visual element picker for the rule editor's Element Selector field
+- Advanced rule actions: auto-click (once or repeating), find & replace text,
+  SPA re-apply (MutationObserver-based re-checking of a rule's match condition)
+- Tools tab: bulk media downloader, link harvester (bulk-open/export), page data
+  scraper (CSV/JSON export)
+- Rule import/export as JSON
+- One-click "Dark Mode This Site" rule generator
+- Master enable/disable kill-switch (`Ctrl+Shift+G`) with a toolbar badge
+- New extension icon (shared design, rasterized separately per browser)
+
+### Changed
+- Both `manifest.json` files now request the `downloads` permission (used only by the
+  bulk media downloader) and declare a `commands` shortcut for the kill-switch
+- `package-all.sh` no longer hardcodes a version or zips inline; it now delegates to
+  `package-chrome-release.sh` and `package-firefox-release.sh`, which each read their
+  version from their own `manifest.json`
+
+### Notes
+- Landed Firefox-first (element picker relayed through `storage.local`+`background.js`
+  since the popup closes before a page click, and JS rules injected via
+  `wrappedJSObject`/script-tag). Chrome reaches full feature parity in this same
+  release; its content script keeps routing JS injection through the background
+  service worker's `chrome.scripting.executeScript` (MAIN world) instead, since that
+  CSP-bypass mechanism was already Chrome's approach pre-2.0 — see CLAUDE.md.
+
 ## [1.0.2] - 2024-10-16
 
 ### Fixed

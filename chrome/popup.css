@@ -1,25 +1,153 @@
+/* ------------------------------------------------------------------ */
+/* GreasyBoii — grease-monkey garage theme, layered on Bootstrap dark  */
+/* ------------------------------------------------------------------ */
+
+:root {
+  --gm-bg: #16140f;
+  --gm-panel: #232019;
+  --gm-panel-alt: #1b1810;
+  --gm-panel-border: #4a3f2c;
+  --gm-amber: #ffb020;
+  --gm-amber-soft: #ffcf5c;
+  --gm-amber-deep: #ff8a1e;
+  --gm-text: #f1e9da;
+  --gm-text-muted: #b9ac93;
+  --gm-success: #6fae4a;
+  --gm-danger: #d9534f;
+}
+
 body {
   width: 600px;
   min-height: 400px;
   max-height: 600px;
   overflow-y: auto;
+  background:
+    radial-gradient(ellipse at top left, rgba(255, 138, 30, 0.08), transparent 55%),
+    radial-gradient(ellipse at bottom right, rgba(0, 0, 0, 0.5), transparent 60%),
+    var(--gm-bg);
+  color: var(--gm-text);
+  scrollbar-color: var(--gm-amber-deep) var(--gm-bg);
+  scrollbar-width: thin;
 }
 
-.rules-list {
-  max-height: 450px;
-  overflow-y: auto;
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--gm-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--gm-panel-border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gm-amber-deep);
 }
 
-.rule-card {
-  border: 1px solid #495057;
-  border-radius: 0.375rem;
+/* ---------------- Brand header ---------------- */
+
+.brand-icon {
+  width: 32px;
+  height: 32px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+}
+
+.brand-title {
+  font-family: 'Arial Narrow', 'Helvetica Neue Condensed', Arial, sans-serif;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: linear-gradient(180deg, var(--gm-amber-soft), var(--gm-amber-deep));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.brand-tagline {
+  font-size: 0.7rem;
+  color: var(--gm-text-muted);
+  letter-spacing: 0.03em;
+}
+
+.hazard-strip {
+  height: 5px;
+  border-radius: 3px;
+  background: repeating-linear-gradient(
+    135deg,
+    var(--gm-amber) 0 10px,
+    #171512 10px 20px
+  );
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.4);
+}
+
+/* ---------------- Tabs ---------------- */
+
+.nav-tabs {
+  border-bottom-color: var(--gm-panel-border);
+}
+
+.nav-tabs .nav-link {
+  color: var(--gm-text-muted);
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border: none;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+  margin-right: 1rem;
+}
+
+.nav-tabs .nav-link:hover {
+  color: var(--gm-amber);
+  border-color: transparent;
+}
+
+.nav-tabs .nav-link.active {
+  color: var(--gm-amber);
+  background: transparent;
+  border-bottom-color: var(--gm-amber);
+}
+
+/* ---------------- Panels: rule cards + tool cards ---------------- */
+
+.rule-card,
+.tool-card {
+  position: relative;
+  border: 1px solid var(--gm-panel-border);
+  border-radius: 0.5rem;
   padding: 1rem;
   margin-bottom: 0.75rem;
-  background-color: #212529;
+  background: linear-gradient(180deg, var(--gm-panel), var(--gm-panel-alt));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.rule-card::before,
+.rule-card::after,
+.tool-card::before,
+.tool-card::after {
+  content: '';
+  position: absolute;
+  top: 7px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #7a7166, #2a2620);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
+}
+.rule-card::before,
+.tool-card::before {
+  left: 7px;
+}
+.rule-card::after,
+.tool-card::after {
+  right: 7px;
 }
 
 .rule-card:hover {
-  border-color: #6c757d;
+  border-color: var(--gm-amber-deep);
 }
 
 .rule-header {
@@ -30,8 +158,9 @@ body {
 }
 
 .rule-name {
-  font-weight: 600;
-  font-size: 1.1rem;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--gm-text);
 }
 
 .rule-actions {
@@ -41,25 +170,152 @@ body {
 
 .rule-details {
   font-size: 0.875rem;
-  color: #adb5bd;
+  color: var(--gm-text-muted);
 }
 
 .rule-badge {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   padding: 0.25rem 0.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
+
+/* ---------------- Buttons ---------------- */
+
+.btn-primary {
+  background: linear-gradient(180deg, var(--gm-amber-soft), var(--gm-amber-deep));
+  border-color: #c9670f;
+  color: #201705;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 2px 4px rgba(0, 0, 0, 0.35);
+}
+.btn-primary:hover,
+.btn-primary:focus {
+  background: linear-gradient(180deg, #ffdb7a, #ff9a3a);
+  border-color: #c9670f;
+  color: #201705;
+}
+.btn-primary:active {
+  background: linear-gradient(180deg, var(--gm-amber-deep), #e8730a);
+  color: #201705;
+}
+
+.btn-outline-light {
+  border-color: var(--gm-panel-border);
+  color: var(--gm-text);
+}
+.btn-outline-light:hover,
+.btn-outline-light:focus {
+  background: var(--gm-amber);
+  border-color: var(--gm-amber);
+  color: #201705;
+}
+
+/* ---------------- Forms ---------------- */
 
 .font-monospace {
   font-family: 'Courier New', monospace;
   font-size: 0.875rem;
 }
 
+.form-control,
+.form-select {
+  background-color: var(--gm-panel-alt);
+  border-color: var(--gm-panel-border);
+  color: var(--gm-text);
+}
+.form-control:focus,
+.form-select:focus {
+  background-color: var(--gm-panel-alt);
+  border-color: var(--gm-amber-deep);
+  color: var(--gm-text);
+  box-shadow: 0 0 0 0.2rem rgba(255, 138, 30, 0.25);
+}
+
 .form-switch .form-check-input {
   cursor: pointer;
   width: 3rem;
   height: 1.5rem;
+  background-color: #3a2e1c;
+  border-color: var(--gm-panel-border);
+}
+.form-switch .form-check-input:checked {
+  background-color: var(--gm-success);
+  border-color: var(--gm-success);
 }
 
+.power-switch #masterToggleLabel {
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  color: var(--gm-text-muted);
+}
+
+/* ---------------- Modal ---------------- */
+
+.modal-content {
+  background: var(--gm-panel);
+  border: 1px solid var(--gm-panel-border);
+}
+.modal-header,
+.modal-footer {
+  border-color: var(--gm-panel-border);
+}
+#modalTitle {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 800;
+  color: var(--gm-amber);
+}
 .modal-lg {
   max-width: 700px;
+}
+
+/* ---------------- Tools tab ---------------- */
+
+.tool-card h6 {
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+  color: var(--gm-amber);
+  border-bottom: 1px solid var(--gm-panel-border);
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.tool-results {
+  min-height: 1.5rem;
+}
+
+.tool-scroll {
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+/* ---------------- Advanced rule fields ---------------- */
+
+#advancedSection > summary {
+  cursor: pointer;
+  user-select: none;
+  color: var(--gm-amber);
+  font-weight: 600;
+}
+
+#advancedSection .border {
+  border-color: var(--gm-panel-border) !important;
+  background: var(--gm-panel-alt);
+}
+
+.replacement-row .form-control {
+  font-size: 0.875rem;
+}
+
+.rules-list {
+  max-height: 450px;
+  overflow-y: auto;
 }
