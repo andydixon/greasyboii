@@ -21,6 +21,10 @@ All notable changes to GreasyBoii will be documented in this file.
 - `package-all.sh` no longer hardcodes a version or zips inline; it now delegates to
   `package-chrome-release.sh` and `package-firefox-release.sh`, which each read their
   version from their own `manifest.json`
+- `firefox/manifest.json` now declares `browser_specific_settings.gecko` (an `id` plus
+  `data_collection_permissions: { required: ["none"] }`) — AMO started rejecting
+  submissions without the latter in November 2025; GreasyBoii collects no data, so
+  `"none"` is accurate
 
 ### Notes
 - Landed Firefox-first (element picker relayed through `storage.local`+`background.js`

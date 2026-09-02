@@ -4,6 +4,14 @@
   "version": "2.0.0",
   "description": "Execute custom JavaScript and CSS based on URL patterns and page elements, plus one-click page tools: bulk downloads, link harvesting, scraping and more",
   "author": "Andy Dixon",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "greasyboii@dixon.cx",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  },
   "permissions": [
     "storage",
     "activeTab",

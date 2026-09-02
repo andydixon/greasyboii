@@ -126,6 +126,15 @@ web-ext sign \
   --api-secret=YOUR_API_SECRET
 ```
 
+**Note:** As of November 2025, AMO requires every submission to declare
+`browser_specific_settings.gecko.data_collection_permissions` in `manifest.json` —
+signing fails with "The data_collection_permissions property is missing" otherwise.
+GreasyBoii collects no data, so `firefox/manifest.json` already declares
+`"required": ["none"]`; if you ever add analytics, telemetry, or any network call,
+update that field to match (see the
+[MDN docs](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/browser_specific_settings)
+for the full list of data categories).
+
 **Run for testing:**
 ```bash
 web-ext run
