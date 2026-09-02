@@ -87,68 +87,136 @@ function loadRules() {
   });
 }
 
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+// Bootstrap icon path data (static, not user-derived) — built via createElementNS
+// rather than innerHTML so nothing in this file ever parses a string as markup.
+const EDIT_ICON_PATHS = [
+  { d: 'M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z' }
+];
+const DELETE_ICON_PATHS = [
+  { d: 'M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z' },
+  { d: 'M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z', fillRule: 'evenodd' }
+];
+
+function buildIconSvg(paths) {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('width', '16');
+  svg.setAttribute('height', '16');
+  svg.setAttribute('fill', 'currentColor');
+  svg.setAttribute('viewBox', '0 0 16 16');
+  paths.forEach(({ d, fillRule }) => {
+    const path = document.createElementNS(SVG_NS, 'path');
+    path.setAttribute('d', d);
+    if (fillRule) path.setAttribute('fill-rule', fillRule);
+    svg.appendChild(path);
+  });
+  return svg;
+}
+
+function makeBadge(text, extraClass) {
+  const span = document.createElement('span');
+  span.className = `badge rule-badge ${extraClass}`;
+  span.textContent = text;
+  return span;
+}
+
+function buildDetailLine(label, value) {
+  const div = document.createElement('div');
+  const strong = document.createElement('strong');
+  strong.textContent = label;
+  div.appendChild(strong);
+  div.appendChild(document.createTextNode(' ' + (value || '')));
+  return div;
+}
+
+function buildRuleActions(rule, index) {
+  const actions = document.createElement('div');
+  actions.className = 'rule-actions';
+
+  const toggleWrap = document.createElement('div');
+  toggleWrap.className = 'form-check form-switch mb-0';
+  const toggle = document.createElement('input');
+  toggle.className = 'form-check-input rule-toggle';
+  toggle.type = 'checkbox';
+  toggle.checked = !!rule.enabled;
+  toggle.dataset.index = index;
+  toggle.title = 'Enable/Disable';
+  toggleWrap.appendChild(toggle);
+  actions.appendChild(toggleWrap);
+
+  const editBtn = document.createElement('button');
+  editBtn.className = 'btn btn-sm btn-outline-light btn-edit-rule';
+  editBtn.dataset.index = index;
+  editBtn.title = 'Edit';
+  editBtn.appendChild(buildIconSvg(EDIT_ICON_PATHS));
+  actions.appendChild(editBtn);
+
+  const deleteBtn = document.createElement('button');
+  deleteBtn.className = 'btn btn-sm btn-outline-danger btn-delete-rule';
+  deleteBtn.dataset.index = index;
+  deleteBtn.title = 'Delete';
+  deleteBtn.appendChild(buildIconSvg(DELETE_ICON_PATHS));
+  actions.appendChild(deleteBtn);
+
+  return actions;
+}
+
+function buildRuleCard(rule, index) {
+  const card = document.createElement('div');
+  card.className = 'rule-card';
+  card.dataset.ruleIndex = index;
+
+  const header = document.createElement('div');
+  header.className = 'rule-header';
+
+  const badgeGroup = document.createElement('div');
+  badgeGroup.className = 'd-flex align-items-center gap-2 flex-wrap';
+
+  const nameSpan = document.createElement('span');
+  nameSpan.className = 'rule-name';
+  nameSpan.textContent = rule.name;
+  badgeGroup.appendChild(nameSpan);
+
+  const matchTypeLabels = { url: 'URL', element: 'Element', both: 'URL + Element' };
+  badgeGroup.appendChild(makeBadge(matchTypeLabels[rule.matchType] || rule.matchType, 'bg-secondary'));
+
+  if (rule.javascript && rule.javascript.trim()) badgeGroup.appendChild(makeBadge('JS', 'bg-warning'));
+  if (rule.css && rule.css.trim()) badgeGroup.appendChild(makeBadge('CSS', 'bg-info'));
+  if (rule.autoClickSelector && rule.autoClickSelector.trim()) badgeGroup.appendChild(makeBadge('Click', 'bg-success'));
+  if (rule.textReplacements && rule.textReplacements.length) badgeGroup.appendChild(makeBadge('Replace', 'bg-primary'));
+  if (rule.reapplyOnDomChanges) badgeGroup.appendChild(makeBadge('SPA', 'bg-dark border'));
+
+  header.appendChild(badgeGroup);
+  header.appendChild(buildRuleActions(rule, index));
+  card.appendChild(header);
+
+  const details = document.createElement('div');
+  details.className = 'rule-details';
+  if (rule.matchType === 'url' || rule.matchType === 'both') {
+    details.appendChild(buildDetailLine('URL:', rule.urlPattern));
+  }
+  if (rule.matchType === 'element' || rule.matchType === 'both') {
+    details.appendChild(buildDetailLine('Element:', rule.elementSelector));
+  }
+  card.appendChild(details);
+
+  return card;
+}
+
 function renderRules() {
   const rulesList = document.getElementById('rulesList');
   const emptyState = document.getElementById('emptyState');
 
+  rulesList.replaceChildren();
+
   if (currentRules.length === 0) {
-    rulesList.innerHTML = '';
     emptyState.style.display = 'block';
     return;
   }
 
   emptyState.style.display = 'none';
-
-  rulesList.innerHTML = currentRules.map((rule, index) => {
-    const matchTypeLabel = {
-      'url': 'URL',
-      'element': 'Element',
-      'both': 'URL + Element'
-    }[rule.matchType] || rule.matchType;
-
-    const hasJS = rule.javascript && rule.javascript.trim();
-    const hasCSS = rule.css && rule.css.trim();
-    const hasAutoClick = rule.autoClickSelector && rule.autoClickSelector.trim();
-    const hasReplacements = rule.textReplacements && rule.textReplacements.length;
-
-    return `
-      <div class="rule-card" data-rule-index="${index}">
-        <div class="rule-header">
-          <div class="d-flex align-items-center gap-2 flex-wrap">
-            <span class="rule-name">${escapeHtml(rule.name)}</span>
-            <span class="badge rule-badge bg-secondary">${matchTypeLabel}</span>
-            ${hasJS ? '<span class="badge rule-badge bg-warning">JS</span>' : ''}
-            ${hasCSS ? '<span class="badge rule-badge bg-info">CSS</span>' : ''}
-            ${hasAutoClick ? '<span class="badge rule-badge bg-success">Click</span>' : ''}
-            ${hasReplacements ? '<span class="badge rule-badge bg-primary">Replace</span>' : ''}
-            ${rule.reapplyOnDomChanges ? '<span class="badge rule-badge bg-dark border">SPA</span>' : ''}
-          </div>
-          <div class="rule-actions">
-            <div class="form-check form-switch mb-0">
-              <input class="form-check-input rule-toggle" type="checkbox" ${rule.enabled ? 'checked' : ''}
-                     data-index="${index}" title="Enable/Disable">
-            </div>
-            <button class="btn btn-sm btn-outline-light btn-edit-rule" data-index="${index}" title="Edit">
-              <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
-              </svg>
-            </button>
-            <button class="btn btn-sm btn-outline-danger btn-delete-rule" data-index="${index}" title="Delete">
-              <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
-                <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-        <div class="rule-details">
-          ${rule.matchType === 'url' || rule.matchType === 'both' ? `<div><strong>URL:</strong> ${escapeHtml(rule.urlPattern)}</div>` : ''}
-          ${rule.matchType === 'element' || rule.matchType === 'both' ? `<div><strong>Element:</strong> ${escapeHtml(rule.elementSelector)}</div>` : ''}
-        </div>
-      </div>
-    `;
-  }).join('');
-
+  currentRules.forEach((rule, index) => rulesList.appendChild(buildRuleCard(rule, index)));
   attachRuleEventListeners();
 }
 
@@ -306,12 +374,6 @@ function toggleRule(index) {
   });
 }
 
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text == null ? '' : text;
-  return div.innerHTML;
-}
-
 // ---------------------------------------------------------------------
 // Advanced rule fields: text replacement rows + the "pick on page" button
 // ---------------------------------------------------------------------
@@ -352,13 +414,37 @@ function setupAdvancedRuleFields() {
 
 function renderReplacementRows(rows) {
   const list = document.getElementById('textReplacementsList');
-  list.innerHTML = rows.map((r, i) => `
-    <div class="input-group input-group-sm mb-1 replacement-row" data-index="${i}">
-      <input type="text" class="form-control replacement-find" placeholder="Find" value="${escapeHtml(r.find || '')}">
-      <input type="text" class="form-control replacement-replace" placeholder="Replace with" value="${escapeHtml(r.replace || '')}">
-      <button class="btn btn-outline-danger remove-replacement-btn" type="button" title="Remove">✕</button>
-    </div>
-  `).join('');
+  list.replaceChildren();
+  rows.forEach((r, i) => list.appendChild(buildReplacementRow(r, i)));
+}
+
+function buildReplacementRow(r, index) {
+  const row = document.createElement('div');
+  row.className = 'input-group input-group-sm mb-1 replacement-row';
+  row.dataset.index = index;
+
+  const findInput = document.createElement('input');
+  findInput.type = 'text';
+  findInput.className = 'form-control replacement-find';
+  findInput.placeholder = 'Find';
+  findInput.value = r.find || '';
+  row.appendChild(findInput);
+
+  const replaceInput = document.createElement('input');
+  replaceInput.type = 'text';
+  replaceInput.className = 'form-control replacement-replace';
+  replaceInput.placeholder = 'Replace with';
+  replaceInput.value = r.replace || '';
+  row.appendChild(replaceInput);
+
+  const removeBtn = document.createElement('button');
+  removeBtn.className = 'btn btn-outline-danger remove-replacement-btn';
+  removeBtn.type = 'button';
+  removeBtn.title = 'Remove';
+  removeBtn.textContent = '✕';
+  row.appendChild(removeBtn);
+
+  return row;
 }
 
 function collectReplacementRows() {
@@ -601,12 +687,39 @@ function setupLinkHarvester() {
       return;
     }
 
-    linkResults.innerHTML = `<div class="tool-scroll">${harvestedLinks.map((link, i) => `
-      <div class="form-check">
-        <input class="form-check-input link-check" type="checkbox" id="link-${i}" data-index="${i}" checked>
-        <label class="form-check-label text-truncate d-block" for="link-${i}" title="${escapeHtml(link.url)}">${escapeHtml(link.text || link.url)}</label>
-      </div>
-    `).join('')}</div><div class="text-muted mt-1">${harvestedLinks.length} link(s) found</div>`;
+    linkResults.replaceChildren();
+
+    const scroll = document.createElement('div');
+    scroll.className = 'tool-scroll';
+
+    harvestedLinks.forEach((link, i) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'form-check';
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.className = 'form-check-input link-check';
+      checkbox.id = `link-${i}`;
+      checkbox.dataset.index = i;
+      checkbox.checked = true;
+      wrap.appendChild(checkbox);
+
+      const label = document.createElement('label');
+      label.className = 'form-check-label text-truncate d-block';
+      label.htmlFor = `link-${i}`;
+      label.title = link.url;
+      label.textContent = link.text || link.url;
+      wrap.appendChild(label);
+
+      scroll.appendChild(wrap);
+    });
+    linkResults.appendChild(scroll);
+
+    const countLine = document.createElement('div');
+    countLine.className = 'text-muted mt-1';
+    countLine.textContent = `${harvestedLinks.length} link(s) found`;
+    linkResults.appendChild(countLine);
+
     openLinksBtn.disabled = false;
     exportLinksBtn.disabled = false;
   }

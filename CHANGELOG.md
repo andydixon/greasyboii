@@ -26,6 +26,20 @@ All notable changes to GreasyBoii will be documented in this file.
   submissions without the latter in November 2025; GreasyBoii collects no data, so
   `"none"` is accurate
 
+### Fixed
+- `popup.js`'s three list-rendering functions (`renderRules`, `renderReplacementRows`,
+  `renderLinkResults`) built their HTML by string-concatenating a template literal into
+  `.innerHTML` — flagged by AMO's linter, and a real bug, not just a lint nit: the
+  `escapeHtml()` helper they leaned on only escapes for text-node context, not for the
+  HTML-attribute context it was actually used in (`value="${escapeHtml(...)}"`,
+  `title="${escapeHtml(...)}"`), so a value containing `"` could break out of the
+  attribute; a rule's `matchType` also rendered unescaped if it wasn't one of the three
+  expected values, reachable via a crafted Import Rules JSON file. Rewrote all three to
+  build DOM nodes directly (`createElement`/`textContent`/property assignment, plus
+  `createElementNS` for the two static SVG icons) instead of ever parsing a string as
+  markup — removes the injection surface entirely rather than just escaping harder, and
+  the now-unused `escapeHtml()` helper is deleted.
+
 ### Notes
 - Landed Firefox-first (element picker relayed through `storage.local`+`background.js`
   since the popup closes before a page click, and JS rules injected via
