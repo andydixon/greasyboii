@@ -609,9 +609,112 @@ function importRules() {
 // ---------------------------------------------------------------------
 
 function setupToolsTab() {
+  setupConversationMarkdown();
   setupMediaDownloader();
   setupLinkHarvester();
   setupDataScraper();
+}
+
+async function setupConversationMarkdown() {
+  const card = document.getElementById('conversationMarkdownCard');
+  const button = document.getElementById('downloadConversationMarkdownBtn');
+  const status = document.getElementById('conversationMarkdownStatus');
+  const tab = await getActiveTab();
+  if (!tab || !/^https:\/\/(chatgpt\.com|chat\.openai\.com)(?:\/|$)/i.test(tab.url || '')) return;
+
+  card.style.display = 'block';
+  button.addEventListener('click', async () => {
+    button.disabled = true;
+    status.textContent = 'Reading conversation…';
+    try {
+      const result = await browser.tabs.sendMessage(tab.id, { action: 'exportConversationMarkdown' });
+      if (!result || result.error) throw new Error(result && result.error || 'Could not read this conversation.');
+      if (!result.images || result.images.length === 0) {
+        downloadBlob(result.markdown, 'chatgpt-conversation.md', 'text/markdown');
+        status.textContent = 'Markdown downloaded.';
+        return;
+      }
+
+      status.textContent = `Preparing ${result.images.length} image(s)…`;
+      const files = [{ name: 'conversation.md', bytes: new TextEncoder().encode(result.markdown) }];
+      for (const image of result.images) {
+        const bytes = image.data ? base64ToBytes(image.data) : await fetchConversationImage(image.url);
+        files.push({ name: `images/${image.name}`, bytes });
+      }
+      downloadBlob(createStoredZip(files), 'chatgpt-conversation.zip', 'application/zip');
+      status.textContent = 'ZIP downloaded.';
+    } catch (error) {
+      status.textContent = error.message || 'Could not download the conversation.';
+    } finally {
+      button.disabled = false;
+    }
+  });
+}
+
+async function fetchConversationImage(url) {
+  const response = await fetch(url, { credentials: 'include' });
+  if (!response.ok) throw new Error(`Could not download image (${response.status}).`);
+  return new Uint8Array(await response.arrayBuffer());
+}
+
+function base64ToBytes(value) {
+  const binary = atob(value);
+  return Uint8Array.from(binary, (char) => char.charCodeAt(0));
+}
+
+function createStoredZip(files) {
+  // ponytail: stored entries keep this dependency-free; add deflate only if archive size matters.
+  const parts = [];
+  const centralDirectory = [];
+  let offset = 0;
+
+  files.forEach(({ name, bytes }) => {
+    const nameBytes = new TextEncoder().encode(name);
+    const checksum = crc32(bytes);
+    const localHeader = new Uint8Array(30 + nameBytes.length);
+    const localView = new DataView(localHeader.buffer);
+    localView.setUint32(0, 0x04034b50, true);
+    localView.setUint16(4, 20, true);
+    localView.setUint32(14, checksum, true);
+    localView.setUint32(18, bytes.length, true);
+    localView.setUint32(22, bytes.length, true);
+    localView.setUint16(26, nameBytes.length, true);
+    localHeader.set(nameBytes, 30);
+    parts.push(localHeader, bytes);
+
+    const centralHeader = new Uint8Array(46 + nameBytes.length);
+    const centralView = new DataView(centralHeader.buffer);
+    centralView.setUint32(0, 0x02014b50, true);
+    centralView.setUint16(4, 20, true);
+    centralView.setUint16(6, 20, true);
+    centralView.setUint32(16, checksum, true);
+    centralView.setUint32(20, bytes.length, true);
+    centralView.setUint32(24, bytes.length, true);
+    centralView.setUint16(28, nameBytes.length, true);
+    centralView.setUint32(42, offset, true);
+    centralHeader.set(nameBytes, 46);
+    centralDirectory.push(centralHeader);
+    offset += localHeader.length + bytes.length;
+  });
+
+  const centralSize = centralDirectory.reduce((size, part) => size + part.length, 0);
+  const end = new Uint8Array(22);
+  const endView = new DataView(end.buffer);
+  endView.setUint32(0, 0x06054b50, true);
+  endView.setUint16(8, files.length, true);
+  endView.setUint16(10, files.length, true);
+  endView.setUint32(12, centralSize, true);
+  endView.setUint32(16, offset, true);
+  return new Blob([...parts, ...centralDirectory, end], { type: 'application/zip' });
+}
+
+function crc32(bytes) {
+  let crc = 0xffffffff;
+  for (const byte of bytes) {
+    crc ^= byte;
+    for (let bit = 0; bit < 8; bit++) crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0);
+  }
+  return (crc ^ 0xffffffff) >>> 0;
 }
 
 function setupMediaDownloader() {

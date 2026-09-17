@@ -223,8 +223,131 @@
       sendResponse({ items: harvestLinks(request.containerSelector) });
     } else if (request.action === 'scrapeData') {
       sendResponse({ items: scrapeData(request.selector, request.attribute) });
+    } else if (request.action === 'exportConversationMarkdown') {
+      exportConversationMarkdown().then(sendResponse).catch((error) => {
+        sendResponse({ error: error.message || 'Could not export the conversation.' });
+      });
+      return true;
     }
   });
+
+  async function exportConversationMarkdown() {
+    // ponytail: read the message nodes already loaded by ChatGPT; add virtual-scroll
+    // pagination only if ChatGPT starts unloading older messages from the DOM.
+    const messageElements = [...document.querySelectorAll('[data-message-author-role]')]
+      .filter((el) => ['user', 'assistant', 'system'].includes(el.dataset.messageAuthorRole));
+    if (!messageElements.length) throw new Error('No ChatGPT messages were found on this page.');
+
+    const imagesByElement = new Map();
+    const imagesByUrl = new Map();
+    let imageNumber = 0;
+
+    for (const message of messageElements) {
+      for (const image of message.querySelectorAll('img')) {
+        const url = image.currentSrc || image.src;
+        if (!url) continue;
+        let imageFile = imagesByUrl.get(url);
+        if (!imageFile) {
+          imageFile = await readConversationImage(url, ++imageNumber);
+          imagesByUrl.set(url, imageFile);
+        }
+        imagesByElement.set(image, imageFile);
+      }
+    }
+
+    const title = (document.querySelector('main h1')?.textContent || document.title || 'ChatGPT Conversation')
+      .replace(/\s*\|\s*ChatGPT.*$/i, '').trim() || 'ChatGPT Conversation';
+    const markdown = [`# ${title.replace(/^#+\s*/, '').replace(/\n/g, ' ')}`, ''];
+
+    messageElements.forEach((message) => {
+      const role = message.dataset.messageAuthorRole === 'assistant' ? 'ChatGPT' :
+        message.dataset.messageAuthorRole[0].toUpperCase() + message.dataset.messageAuthorRole.slice(1);
+      const body = cleanConversationMarkdown(nodeToConversationMarkdown(message, imagesByElement));
+      if (body) markdown.push(`## ${role}`, '', body, '');
+    });
+
+    return { markdown: `${markdown.join('\n').trim()}\n`, images: [...imagesByUrl.values()] };
+  }
+
+  async function readConversationImage(url, number) {
+    const fallbackName = `image-${String(number).padStart(3, '0')}.${imageExtension(url)}`;
+    try {
+      let bytes;
+      let mimeType = '';
+      if (url.startsWith('data:')) {
+        const match = url.match(/^data:([^,]*),(.*)$/s);
+        if (!match) throw new Error('Invalid data URL');
+        mimeType = (match[1].split(';')[0] || '').toLowerCase();
+        bytes = match[1].includes(';base64')
+          ? base64ToBytes(match[2])
+          : new TextEncoder().encode(decodeURIComponent(match[2]));
+      } else {
+        const response = await fetch(url, { credentials: 'include' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        mimeType = response.headers.get('content-type') || '';
+        bytes = new Uint8Array(await response.arrayBuffer());
+      }
+      const name = `image-${String(number).padStart(3, '0')}.${imageExtension(url, mimeType)}`;
+      return { name, url, mimeType, data: bytesToBase64(bytes) };
+    } catch (error) {
+      return { name: fallbackName, url, error: error.message || 'download failed' };
+    }
+  }
+
+  function nodeToConversationMarkdown(node, imagesByElement) {
+    if (node.nodeType === Node.TEXT_NODE) return node.nodeValue.replace(/\s+/g, ' ');
+    if (node.nodeType !== Node.ELEMENT_NODE) return '';
+
+    const tag = node.tagName.toLowerCase();
+    if (['button', 'svg', 'script', 'style', 'textarea'].includes(tag)) return '';
+    if (tag === 'img') {
+      const image = imagesByElement.get(node);
+      return image ? `![${node.alt || 'Image'}](images/${image.name})` : '';
+    }
+    if (tag === 'pre') return `\n\n\`\`\`\n${node.textContent.trim()}\n\`\`\`\n\n`;
+    if (tag === 'br') return '\n';
+    if (tag === 'a') {
+      const text = cleanConversationMarkdown([...node.childNodes]
+        .map((child) => nodeToConversationMarkdown(child, imagesByElement)).join(''));
+      return text ? `[${text}](${node.href})` : node.href;
+    }
+    if (tag === 'code') return `\`${node.textContent.trim()}\``;
+
+    const children = [...node.childNodes]
+      .map((child) => nodeToConversationMarkdown(child, imagesByElement)).join('');
+    if (/^h[1-6]$/.test(tag)) return `\n\n${'#'.repeat(Number(tag[1]))} ${children.trim()}\n\n`;
+    if (tag === 'li') return `\n- ${children.trim()}\n`;
+    if (['p', 'div', 'section', 'article', 'blockquote', 'ul', 'ol'].includes(tag)) {
+      return `\n${children}\n`;
+    }
+    return children;
+  }
+
+  function cleanConversationMarkdown(text) {
+    return text.replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+  }
+
+  function imageExtension(url, mimeType = '') {
+    const mimeExtensions = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif',
+      'image/webp': 'webp', 'image/svg+xml': 'svg', 'image/bmp': 'bmp', 'image/avif': 'avif' };
+    if (mimeExtensions[mimeType.split(';')[0].toLowerCase()]) return mimeExtensions[mimeType.split(';')[0].toLowerCase()];
+    const match = url.match(/\.([a-z0-9]+)(?:[?#]|$)/i);
+    return match && ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'avif'].includes(match[1].toLowerCase())
+      ? match[1].toLowerCase() : 'bin';
+  }
+
+  function base64ToBytes(value) {
+    const binary = atob(value.replace(/\s/g, ''));
+    return Uint8Array.from(binary, (char) => char.charCodeAt(0));
+  }
+
+  function bytesToBase64(bytes) {
+    let binary = '';
+    for (let offset = 0; offset < bytes.length; offset += 0x8000) {
+      binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
+    }
+    return btoa(binary);
+  }
 
   function scanMedia(mediaType, customExtensions) {
     const extMap = {
