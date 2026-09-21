@@ -77,6 +77,11 @@ function updateFieldVisibility(matchType) {
     elementGroup.style.display = 'block';
     urlInput.required = true;
     elementInput.required = true;
+  } else if (matchType === 'all') {
+    urlGroup.style.display = 'none';
+    elementGroup.style.display = 'none';
+    urlInput.required = false;
+    elementInput.required = false;
   }
 }
 
@@ -178,7 +183,7 @@ function buildRuleCard(rule, index) {
   nameSpan.textContent = rule.name;
   badgeGroup.appendChild(nameSpan);
 
-  const matchTypeLabels = { url: 'URL', element: 'Element', both: 'URL + Element' };
+  const matchTypeLabels = { url: 'URL', element: 'Element', both: 'URL + Element', all: 'Every page' };
   badgeGroup.appendChild(makeBadge(matchTypeLabels[rule.matchType] || rule.matchType, 'bg-secondary'));
 
   if (rule.javascript && rule.javascript.trim()) badgeGroup.appendChild(makeBadge('JS', 'bg-warning'));

@@ -8,10 +8,10 @@
   const autoClickTimers = new Map(); // rule name -> setInterval id
   const injectedStyles = new Map(); // rule name -> <style> element currently on the page
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', boot);
-  } else {
+  if (document.readyState === 'complete') {
     boot();
+  } else {
+    window.addEventListener('load', boot, { once: true });
   }
 
   function boot() {
@@ -41,25 +41,37 @@
 
   function ruleMatches(rule) {
     const currentUrl = window.location.href;
-    if (rule.matchType === 'url') {
-      return currentUrl.includes(rule.urlPattern);
-    } else if (rule.matchType === 'element') {
-      return !!document.querySelector(rule.elementSelector);
-    } else if (rule.matchType === 'both') {
-      return currentUrl.includes(rule.urlPattern) && !!document.querySelector(rule.elementSelector);
+    if (rule.matchType === 'all') {
+      return { matched: true, elementCount: null };
     }
-    return false;
+
+    if (rule.matchType === 'url') {
+      return { matched: currentUrl.includes(rule.urlPattern), elementCount: null };
+    }
+
+    if (rule.matchType !== 'element' && rule.matchType !== 'both') {
+      return { matched: false, elementCount: null };
+    }
+    if (rule.matchType === 'both' && !currentUrl.includes(rule.urlPattern)) {
+      return { matched: false, elementCount: null };
+    }
+
+    const elementCount = document.querySelectorAll(rule.elementSelector).length;
+    return { matched: elementCount > 0, elementCount };
   }
 
   function evaluateRule(rule) {
     if (!rule.enabled) return;
 
-    const matched = ruleMatches(rule);
+    const { matched, elementCount } = ruleMatches(rule);
     const wasMatched = ruleMatchState.get(rule.name) === true;
     ruleMatchState.set(rule.name, matched);
 
     if (matched && !wasMatched) {
-      console.log(`[GreasyBoii] ✓ Executing rule: ${rule.name}`);
+      const elementLog = elementCount === null
+        ? ''
+        : ` (${elementCount} element${elementCount === 1 ? '' : 's'} found for "${rule.elementSelector}")`;
+      console.log(`[GreasyBoii] Rule triggered: ${rule.name}${elementLog}`);
       executeRule(rule);
     }
   }
