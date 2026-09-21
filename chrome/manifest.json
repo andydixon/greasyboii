@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "GreasyBoii",
-  "version": "2.0.0",
-  "description": "Execute custom JavaScript and CSS based on URL patterns and page elements, plus one-click page tools: bulk downloads, link harvesting, scraping and more",
+  "version": "2.0.1",
+  "description": "Run custom JavaScript and CSS on webpages, with tools for downloads, links and data scraping.",
   "author": "Andy Dixon",
   "permissions": [
     "storage",
